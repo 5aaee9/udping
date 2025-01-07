@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"crypto/rand"
 	"flag"
 	"fmt"
 	"log"
@@ -16,24 +18,37 @@ import (
 var target = flag.String("target", "127.0.0.1:8080", "target server")
 var times = flag.Int("times", 0, "number of times to ping")
 var interval = flag.Float64("interval", 1, "interval between pings")
+var protocol = flag.String("protocol", "udp", "protocol")
+
+var size = flag.Int("size", 512, "size pre packet")
 
 func init() {
 	flag.Parse()
 }
 
 func ping(conn net.Conn) bool {
+	data := make([]byte, *size)
+	_, _ = rand.Read(data)
+
 	_ = conn.SetDeadline(time.Now().Add(time.Duration(*interval * float64(time.Second))))
-	_, err := conn.Write([]byte("ping"))
+	_, err := conn.Write(data)
 	if err != nil {
 		log.Println("Error writing:", err)
 		return false
 	}
-	_, err = conn.Read(make([]byte, 4))
+
+	response := make([]byte, *size)
+	_, err = conn.Read(response)
 	if err != nil {
 		log.Println("Error reading:", err)
 		return false
 	}
 	_ = conn.SetDeadline(time.Time{})
+
+	if !bytes.Equal(response, data) {
+		log.Println("Response checksum error")
+		return false
+	}
 
 	return true
 }
@@ -76,7 +91,7 @@ loop:
 		default:
 			timestamp := time.Now()
 			if conn == nil {
-				conn, err = net.Dial("udp", *target)
+				conn, err = net.Dial(*protocol, *target)
 			}
 
 			if err != nil {
