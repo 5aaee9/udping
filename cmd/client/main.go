@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"net"
@@ -38,7 +39,7 @@ func ping(conn net.Conn) bool {
 	}
 
 	response := make([]byte, *size)
-	_, err = conn.Read(response)
+	_, err = io.ReadFull(conn, response)
 	if err != nil {
 		log.Println("Error reading:", err)
 		return false
