@@ -114,6 +114,9 @@ loop:
 				minRtt = min(timeMs, minRtt)
 				maxRtt = max(timeMs, maxRtt)
 				averageRtt = averageRtt + timeMs
+			} else {
+				_ = conn.Close()
+				conn = nil
 			}
 
 			if *times == 0 || *times != totalTimes {
