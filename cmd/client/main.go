@@ -115,7 +115,9 @@ loop:
 				maxRtt = max(timeMs, maxRtt)
 				averageRtt = averageRtt + timeMs
 			} else {
-				_ = conn.Close()
+				if conn != nil {
+					_ = conn.Close()
+				}
 				conn = nil
 			}
 
